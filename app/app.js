@@ -12,7 +12,7 @@ const tasks = [
 ];
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "OK" });
+  res.status(200).json({ status: "Reussi" });
 });
 
 app.get("/tasks", (req, res) => {
