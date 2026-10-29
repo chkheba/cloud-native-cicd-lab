@@ -62,6 +62,66 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`API running on port ${PORT}`);
+
+app.put("/tasks/:id", async (req, res) => {
+  const { title, completed } = req.body;
+
+  if (
+    typeof title !== "string" ||
+    !title.trim() ||
+    typeof completed !== "boolean"
+  ) {
+    return res.status(400).json({
+      error: "Valid title and completed status required"
+    });
+  }
+
+  try {
+    const [result] = await pool.execute(
+      "UPDATE tasks SET title = ?, completed = ? WHERE id = ?",
+      [title.trim(), completed, req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    res.json({
+      id: Number(req.params.id),
+      title: title.trim(),
+      completed
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Database error" });
+  }
 });
+
+
+app.delete("/tasks/:id", async (req, res) => {
+  try {
+    const [result] = await pool.execute(
+      "DELETE FROM tasks WHERE id = ?",
+      [req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`API running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
